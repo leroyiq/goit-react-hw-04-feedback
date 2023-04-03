@@ -1,61 +1,58 @@
-import { FeedbackWidget } from '../FeedbackWidget/FeedbackWidget';
-import { Component } from 'react';
+import { useState } from 'react';
+import { Section } from './Section/Section';
+import { FeedbackOptions } from './FeedbackOptions/FeedbackOptions';
+import { Statistics } from './Statistics/Statistics';
+import { Notification } from './Statistics/Notification';
 
-export class App extends Component {
-  state = {
-    good: { name: 'Good', value: 0 },
-    neutral: { name: 'Neutral', value: 0 },
-    bad: { name: 'Bad', value: 0 },
-    total: { name: 'Total', value: 0 },
-    positivePercentage: { name: 'Positive feedback', value: '0%' },
+export const App = () => {
+  const [good, setGood] = useState(0);
+  const [neutral, setNeutral] = useState(0);
+  const [bad, setBad] = useState(0);
+
+  const total = good + neutral + bad;
+
+  const handleClick = event => {
+    const { name } = event.target;
+    switch (name) {
+      case 'Good':
+        setGood(prev => prev + 1);
+        break;
+      case 'Neutral':
+        setNeutral(prev => prev + 1);
+        break;
+      case 'Bad':
+        setBad(prev => prev + 1);
+        break;
+      default:
+        return;
+    }
   };
 
-  countPositiveFeedbackPercentage = () => {
-    this.setState(
-      ({
-        good: { value: goodValue },
-        total: { value: totalValue },
-        positivePercentage,
-      }) => ({
-        positivePercentage: {
-          ...positivePercentage,
-          value: Math.round((goodValue * 100) / totalValue.toFixed(5)) + '%',
-        },
-      })
-    );
+  const countPositiveFeedbackPercentage = () => {
+    return Math.round((good * 100) / total.toFixed(5)) + '%';
   };
 
-  countTotalFeedback = () => {
-    this.setState(
-      ({
-        good: { value: goodValue },
-        neutral: { value: neutralValue },
-        bad: { value: badValue },
-        total,
-      }) => ({
-        total: { ...total, value: goodValue + neutralValue + badValue },
-      })
-    );
-    this.countPositiveFeedbackPercentage();
-  };
-
-  handleStatisticChange = evt => {
-    const key = evt.target.name;
-    this.setState(prevState => ({
-      [key]: { ...prevState[key], value: prevState[key].value + 1 },
-    }));
-    this.countTotalFeedback();
-  };
-  render() {
-    return (
-      <>
-        <FeedbackWidget
-          stateData={this.state}
-          onChangeStatistic={this.handleStatisticChange}
+  return (
+    <>
+      <Section title="Please leave feedback">
+        <FeedbackOptions
+          options={['Good', 'Neutral', 'Bad']}
+          onClick={handleClick}
         />
-      </>
-    );
-  }
-}
-
-export default App;
+      </Section>
+      <Section title="Statistics">
+        {total > 0 ? (
+          <Statistics
+            good={good}
+            neutral={neutral}
+            bad={bad}
+            total={total}
+            positivePercentage={countPositiveFeedbackPercentage()}
+          />
+        ) : (
+          <Notification message="There is no feedback" />
+        )}
+      </Section>
+    </>
+  );
+};
